@@ -83,8 +83,8 @@ if __name__ == '__main__':
     # Local paths and settings (lowercase names)
     filter_start = pd.Timestamp("2025-01-01")
     generation_dir = Path('../input/kw_4.5')
-    output_dir = Path('../output')
-    figs_dir = Path('../figs')
+    output_dir = Path('../output/kw_4.5/')
+    figs_dir = Path('../figs/kw_4.5/')
     generations = [0, 10, 20, 30, 40, 50, 60, 70]
 
     # File definitions

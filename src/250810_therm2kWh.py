@@ -1,42 +1,48 @@
 from pathlib import Path
 import pandas as pd
-from datetime import datetime
-
 
 THERM_TO_DELIVERED_KWH = 29.3 * (0.4 * 0.60 / 0.85 + 0.6 * 0.90)  # ≈ 24.09
 
-
 def load_usage(path: Path) -> pd.DataFrame:
-    """Read PG&E usage CSV and parse DATE."""
+    """Read PG&E usage CSV, parse DATE+START TIME into a single timestamp."""
     df = pd.read_csv(path)
-    df["DATE"] = pd.to_datetime(df["DATE"])
+    # Combine date and start-time columns if present
+    if "START TIME" in df.columns:
+        # Create full datetime from DATE and START TIME
+        df["DATE"] = pd.to_datetime(
+            df["DATE"].astype(str) + " " + df["START TIME"].astype(str)
+        )
+        # Drop time columns if desired
+        df = df.drop(columns=["START TIME", "END TIME"] if {"END TIME"}.issubset(df.columns) else ["START TIME"])
+    else:
+        df["DATE"] = pd.to_datetime(df["DATE"])
     return df
 
 
+def aggregate_hourly_usage(df: pd.DataFrame) -> pd.DataFrame:
+    """Aggregate 15-min electricity readings into hourly totals."""
+    elec = df[df["TYPE"].str.contains("Electric", case=False)].copy()
+    # Floor timestamps to the hour
+    elec["HOUR"] = elec["DATE"].dt.floor("H")
+    # Sum usage per hour
+    hourly = (
+        elec.groupby("HOUR", as_index=False)["USAGE (kWh)"].sum()
+        .rename(columns={"HOUR": "DATE"})
+    )
+    # Reattach TYPE column
+    hourly["TYPE"] = "Electric"
+    return hourly
+
+
 def daily_gas(df: pd.DataFrame) -> pd.DataFrame:
-    """Return **distributed** daily gas usage in therms.
-
-    The meter only registers whole‑therm increments. Whenever a non‑zero
-    increment appears, it is assumed to represent the cumulative gas used
-    since the *previous* increment (or since the start of the file).
-    That increment is therefore spread evenly over the run of days that
-    precede **and include** the increment day.
-
-    Example
-    -------
-    Raw increments : 0, 0, 1.03, 0, 1.02, 0, 0, 0, 1.00
-    Distributed    : 0.34, 0.34, 0.34, 0.51, 0.51, 0.25, 0.25, 0.25, 0.25
-    """
-    # Aggregate raw daily increments (may be 0 most days)
+    """Return distributed daily gas usage in therms."""
+    # Normalize full timestamps to date only
     gas_inc = (
         df[df["TYPE"].str.match(r".+gas.*", case=False)]
-        .groupby(df["DATE"].dt.normalize(), as_index=True)["USAGE (kWh)"]
-        .sum()
+        .groupby(df["DATE"].dt.normalize(), as_index=True)["USAGE (kWh)"].sum()
     )
-    gas_inc = pd.DataFrame(gas_inc).reset_index().rename(columns={"DATE": "DAY", "USAGE (kWh)": "increment_therms"})
+    gas_inc = gas_inc.rename("increment_therms").reset_index().rename(columns={"DATE": "DAY"})
 
-
-    # Ensure every calendar day is present
     full_days = pd.date_range(gas_inc["DAY"].min(), gas_inc["DAY"].max(), freq="D")
     gas = (
         pd.DataFrame({"DAY": full_days})
@@ -44,20 +50,16 @@ def daily_gas(df: pd.DataFrame) -> pd.DataFrame:
         .fillna({"increment_therms": 0.0})
     )
 
-    # Distribute each non‑zero increment backward over the run of days
-    # since the last increment (inclusive).
     dist_rows = []
-    span = []  # list of days since last increment (running)
+    span = []
     for _, row in gas.iterrows():
         span.append(row["DAY"])
         inc = row["increment_therms"]
-        if inc > 0:  # distribute now
+        if inc > 0:
             share = inc / len(span)
             for d in span:
                 dist_rows.append({"DAY": d, "gas_therms": share})
-            span = []  # reset span
-
-    # Any trailing days after the last increment get zero usage
+            span = []
     for d in span:
         dist_rows.append({"DAY": d, "gas_therms": 0.0})
 
@@ -65,44 +67,45 @@ def daily_gas(df: pd.DataFrame) -> pd.DataFrame:
     return gas_daily
 
 
-
 def add_gas_equiv_kwh(hourly: pd.DataFrame, gas_daily: pd.DataFrame,
                       start: pd.Timestamp) -> pd.DataFrame:
-    """Return hourly DataFrame with both the original and gas‑adjusted kWh.
-
-    * ``USAGE (kWh)`` – raw value from the smart‑meter file (left untouched).
-    * ``adjusted_kwh`` – same value plus the gas‑to‑electric equivalent for
-      electric rows dated ``start`` or later.
-    """
+    """Return hourly DataFrame with original + gas-adjusted kWh."""
     gas_daily = gas_daily.assign(
         gas_kwh_hourly=lambda g: g["gas_therms"] * THERM_TO_DELIVERED_KWH / 24
     )
 
-    hourly = hourly.copy()
-    hourly["DAY"] = hourly["DATE"].dt.normalize()
+    df = hourly.copy()
+    # DAY column for merge
+    df["DAY"] = df["DATE"].dt.normalize()
 
-    merged = hourly.merge(gas_daily[["DAY", "gas_kwh_hourly"]], on="DAY", how="left")
-
-    # Initialise adjusted_kwh as the unmodified usage
-    merged["adjusted_kwh"] = merged["USAGE (kWh)"]
-
-    # Only add gas equivalence to electric rows on/after START_DATE
-    mask = (
-        merged["TYPE"].str.contains("Electric", case=False)
-        & (merged["DATE"] >= start)
+    merged = df.merge(
+        gas_daily[["DAY", "gas_kwh_hourly"]], on="DAY", how="left"
     )
-    merged.loc[mask, "adjusted_kwh"] += merged.loc[mask, "gas_kwh_hourly"]
+    # Preserve original usage
+    merged["original_kwh"] = merged["USAGE (kWh)"]
+    merged["adjusted_kwh"] = merged["original_kwh"]
+
+    # Apply gas equivalent from start date
+    mask = merged["DATE"] >= start
+    merged.loc[mask, "adjusted_kwh"] += merged.loc[mask, "gas_kwh_hourly"].fillna(0)
 
     return merged.drop(columns=["DAY", "gas_kwh_hourly"])
 
 
 if __name__ == "__main__":
+
     RAW_CSV = Path("../input/pge_usage_2024-08-01_to_2025-07-31.csv")
     OUT_CSV = Path("../output/2025_adjusted_kWh.csv")
     START_DATE = pd.Timestamp("2025-01-01")
 
     raw = load_usage(RAW_CSV)
+    # Aggregate electric 15-min readings to hourly
+    hourly_elec = aggregate_hourly_usage(raw)
+    # Compute daily gas distribution
     gas_daily = daily_gas(raw)
-    adjusted = add_gas_equiv_kwh(raw, gas_daily, START_DATE)
-    adjusted.to_csv(OUT_CSV, index=False)
-    print(f"✅  Saved adjusted file → {OUT_CSV.resolve()}")
+    # Apply gas-equivalent to hourly data
+    adjusted = add_gas_equiv_kwh(hourly_elec, gas_daily, START_DATE)
+    # Filter to records on/after START_DATE
+    filtered = adjusted[adjusted["DATE"] >= START_DATE]
+    filtered.to_csv(OUT_CSV, index=False)
+    print(f"✅  Saved adjusted file for period {START_DATE.date()} onwards → {OUT_CSV.resolve()}")

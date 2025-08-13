@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 # Constants
 IMPORT_PRICE = 0.453  # $ per kWh for buying
-BATTERY_MAX_SOC = 0  # Full capacity threshold for selling
+BATTERY_MAX_SOC = 13.5  # Full capacity threshold for selling
 
 
 def load_data(battery_path: str, sell_price_path: str) -> (pd.DataFrame, pd.DataFrame):

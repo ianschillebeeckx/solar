@@ -80,27 +80,29 @@ def plot_energy(df: pd.DataFrame, index: int, short_desc: str):
 
 
 if __name__ == '__main__':
-    # Local paths and settings (lowercase names)
     filter_start = pd.Timestamp("2025-01-01")
-    generation_dir = Path('../input/kw_6.4')
-    output_dir = Path('../output/kw_6.4/')
-    figs_dir = Path('../figs/kw_6.4/')
-    generations = [0, 10, 20, 30, 40, 50, 60, 70]
 
-    # File definitions
-    usage_file = output_dir / '2025_adjusted_KWh.csv'
+    for kw in [4.5, 5.5, 6.4]:
+        # Local paths and settings (lowercase names)
+        generation_dir = Path(f'../input/kw_{kw}')
+        output_dir = Path(f'../output/kw_{kw}/')
+        figs_dir = Path(f'../figs/kw_{kw}/')
+        generations = [0, 10, 20, 30, 40, 50, 60, 70]
 
-    # Batch simulate and save
-    for i in generations:
-        gen_file = generation_dir / f'pvwatts_hourly_{i}.csv'
-        out_file = output_dir / f'merged_battery_2025_onward_{i}.csv'
-        df = simulate_battery(usage_file, gen_file)
-        df.to_csv(out_file, index=False)
-        short_desc = f'pv{i}'
+        # File definitions
+        usage_file = '../output/2025_adjusted_KWh.csv'
 
-        # Plot and save each figure
-        plot_energy(df, i, short_desc)
-        fig_path = figs_dir / f'250810_lineplot_{short_desc}.png'
-        plt.savefig(fig_path)
-        plt.close()
-        print(f"Saved plot to {fig_path}")
+        # Batch simulate and save
+        for i in generations:
+            gen_file = generation_dir / f'pvwatts_hourly_{i}.csv'
+            out_file = output_dir / f'merged_battery_2025_onward_{i}.csv'
+            df = simulate_battery(usage_file, gen_file)
+            df.to_csv(out_file, index=False)
+            short_desc = f'pv{i}'
+
+            # Plot and save each figure
+            plot_energy(df, i, short_desc)
+            fig_path = figs_dir / f'250810_lineplot_{short_desc}.png'
+            plt.savefig(fig_path)
+            plt.close()
+            print(f"Saved plot to {fig_path}")

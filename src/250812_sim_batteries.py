@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 
 # Constants
-BATTERY_CAPACITY_KWH = 13.5  # usable capacity
+BATTERY_CAPACITY_KWH = 0  # usable capacity
 FILTER_START = pd.Timestamp("2025-01-01")
 
 

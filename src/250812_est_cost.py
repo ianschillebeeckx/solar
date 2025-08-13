@@ -3,7 +3,7 @@ import calendar
 import matplotlib.pyplot as plt
 
 # Constants
-IMPORT_PRICE = 0.453  # $ per kWh for buying
+IMPORT_PRICE = 0.43  # $ per kWh for buying
 BATTERY_MAX_SOC = 13.5  # Full capacity threshold for selling
 
 
@@ -50,12 +50,14 @@ def process_and_calculate(batt: pd.DataFrame, sell: pd.DataFrame) -> pd.DataFram
             buy_price = IMPORT_PRICE
             cost = buy_kwh * buy_price
         # No trade if battery has charge and there is usage
-        elif soc != 0 and usage > 0:
+        elif soc >0 and soc < BATTERY_MAX_SOC and usage > 0:
             pass
         # Selling logic
         elif soc >= BATTERY_MAX_SOC and (gen - usage) > 0:
             sell_kwh = gen - usage
             cost = -sell_kwh * sell_price
+        else:
+            print("SOMETHING WENT WRONG")
         return pd.Series({
             'buy_kwh': buy_kwh,
             'buy_price': buy_price,
@@ -128,7 +130,7 @@ if __name__ == '__main__':
         plt.figure()
         for s, m in monthly_costs.items():
             plt.plot(m.index, m.values, marker='o', linestyle='-', label=f'Scenario {s}')
-        plt.ylim([0,275])
+        # plt.ylim([0,275])
         plt.xlabel('Month')
         plt.ylabel('Total Net Cost ($)')
         plt.title(f'Monthly Net Cost Comparison {kw}')

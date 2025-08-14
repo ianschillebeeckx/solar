@@ -1,7 +1,7 @@
 from pathlib import Path
 import pandas as pd
 
-THERM_TO_DELIVERED_KWH = 29.3 * (0.4 * 0.60 / 0.85 + 0.6 * 0.90)  # ≈ 24.09
+THERM_TO_DELIVERED_KWH = 29.3 * (0.5 * 0.38 / 0.87 + 0.5 * 0.90 / 3.9)  # ≈ 9.8
 
 def load_usage(path: Path) -> pd.DataFrame:
     """Read PG&E usage CSV, parse DATE+START TIME into a single timestamp."""

@@ -3,11 +3,10 @@ import calendar
 import matplotlib.pyplot as plt
 
 # Constants
-IMPORT_PRICE = 0.43  # $ per kWh for buying
 BATTERY_MAX_SOC = 13.5  # Full capacity threshold for selling
 
 
-def load_data(battery_path: str, sell_price_path: str) -> (pd.DataFrame, pd.DataFrame):
+def load_data(battery_path: str, sell_price_path: str, buy_price_path: str) -> (pd.DataFrame, pd.DataFrame):
     """
     Load true CSV battery data (comma-separated) and sell-price schedule.
     """
@@ -18,10 +17,14 @@ def load_data(battery_path: str, sell_price_path: str) -> (pd.DataFrame, pd.Data
     )
     sell = pd.read_csv(sell_price_path, index_col=0)
     sell.index = sell.index.astype(int)
-    return batt, sell
+
+    buy = pd.read_csv(buy_price_path, index_col=0)
+    buy.index = sell.index.astype(int)
+
+    return batt, sell, buy
 
 
-def process_and_calculate(batt: pd.DataFrame, sell: pd.DataFrame) -> pd.DataFrame:
+def process_and_calculate(batt: pd.DataFrame, sell: pd.DataFrame, buy: pd.DataFrame) -> pd.DataFrame:
     """
     Annotate batt, compute buys/sells and net cost per hour.
     """
@@ -30,24 +33,23 @@ def process_and_calculate(batt: pd.DataFrame, sell: pd.DataFrame) -> pd.DataFram
     df['hour'] = df['timestamp'].dt.hour
     df['prev_soc'] = df['battery_soc_kwh'].shift(1).fillna(df['battery_soc_kwh'])
 
-    def lookup_price(hour, month):
+    def lookup_price(hour, month, lookup):
         mon_abbr = calendar.month_abbr[month]
-        return sell.at[int(hour), mon_abbr]
+        return lookup.at[int(hour), mon_abbr]
 
     def cost_row(row):
         soc = row['battery_soc_kwh']
         prev_soc = row['prev_soc']
         usage = row['usage_kwh']
         gen = row['generation_kwh']
-        sell_price = lookup_price(row['hour'], row['month'])
+        sell_price = lookup_price(row['hour'], row['month'], sell)
         buy_kwh = 0.0
         sell_kwh = 0.0
-        buy_price = 0.0
+        buy_price = lookup_price(row['hour'], row['month'], buy)
         cost = 0.0
         # Purchase logic
         if soc == 0 and (usage - gen - prev_soc) > 0:
             buy_kwh = usage - gen - prev_soc
-            buy_price = IMPORT_PRICE
             cost = buy_kwh * buy_price
         # No trade if battery has charge and there is usage
         elif soc >0 and soc < BATTERY_MAX_SOC and usage > 0:
@@ -88,6 +90,7 @@ def plot_metrics(df: pd.DataFrame, kw: float, scenario: int):
 
 if __name__ == '__main__':
     sell_price_file = '../input/250810 PGE Comp.csv'
+    buy_price_file = '../input/250814 PGE ELEC.csv'
 
 
     kws = [4.5, 5.5, 6.4]
@@ -104,8 +107,8 @@ if __name__ == '__main__':
             output_file = f'{base_dir}electricity_costs_{s}.csv'
 
             # Load and process
-            batt_df, sell_df = load_data(batt_file, sell_price_file)
-            result_df = process_and_calculate(batt_df, sell_df)
+            batt_df, sell_df, buy_df = load_data(batt_file, sell_price_file, buy_price_file)
+            result_df = process_and_calculate(batt_df, sell_df, buy_df)
 
             # Save results
             cols = [

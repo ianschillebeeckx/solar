@@ -1,0 +1,43 @@
+﻿
+Name,Jeanette Gehrig
+Address,"368 CRESTA VIS, SAN FRANCISCO CA 94127"
+Account Number,2384811499
+Service,Service 1
+
+TYPE,START DATE,END DATE,USAGE (kWh),COST,NOTES
+Electric billing,2022-07-26,2022-08-24,146.12,$30.92
+Electric billing,2022-08-25,2022-09-25,58.52,$12.46
+Electric billing,2022-09-26,2022-10-24,56.34,$11.36
+Electric billing,2022-10-25,2022-11-22,376.02,$78.10
+Electric billing,2022-11-23,2022-12-22,295.28,$56.41
+Electric billing,2022-12-23,2023-01-24,297.19,$54.61
+Electric billing,2023-01-25,2023-02-23,439.34,$86.12
+Electric billing,2023-02-24,2023-03-26,334.79,$64.84
+Electric billing,2023-03-27,2023-04-25,246.36,$44.08
+Electric billing,2023-04-26,2023-05-24,158.00,$27.08
+Electric billing,2023-05-25,2023-06-25,159.00,$32.64
+Electric billing,2023-06-26,2023-07-25,195.16,$43.80
+Electric billing,2023-07-26,2023-08-23,196.86,$45.39
+Electric billing,2023-08-24,2023-09-24,166.63,$38.48
+Electric billing,2023-09-25,2023-10-24,209.88,$41.28
+Electric billing,2023-10-25,2023-11-26,199.41,$37.75
+Electric billing,2023-11-27,2023-12-25,225.36,$43.33
+Electric billing,2023-12-26,2024-01-24,218.76,$49.98
+Electric billing,2024-01-25,2024-02-25,210.95,$50.07
+Electric billing,2024-02-26,2024-03-25,190.20,$45.32
+Electric billing,2024-03-26,2024-04-24,162.44,$40.15
+Electric billing,2024-04-25,2024-05-23,178.10,$43.50
+Electric billing,2024-05-24,2024-06-24,377.87,$121.34
+Electric billing,2024-06-25,2024-07-23,179.06,$48.82
+Electric billing,2024-07-24,2024-08-22,171.83,$46.35
+Electric billing,2024-08-23,2024-09-23,153.32,$41.55
+Electric billing,2024-09-24,2024-10-22,341.93,$97.26
+Electric billing,2024-10-23,2024-11-20,308.63,$83.32
+Electric billing,2024-11-21,2024-12-22,261.97,$65.08
+Electric billing,2024-12-23,2025-01-22,513.56,$150.95
+Electric billing,2025-01-23,2025-02-23,639.21,$191.24
+Electric billing,2025-02-24,2025-03-24,371.12,$105.25
+Electric billing,2025-03-25,2025-04-22,421.17,$122.93
+Electric billing,2025-04-23,2025-05-21,262.16,$67.89
+Electric billing,2025-05-22,2025-06-23,355.83,$101.85
+Electric billing,2025-06-24,2025-07-23,246.10,$73.07

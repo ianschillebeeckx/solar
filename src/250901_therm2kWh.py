@@ -19,7 +19,7 @@ COOKING_HOURS      = (17, 18)       # 5pm and 6pm
 EV_CHARGE_HOURS    = (10, 11, 12, 13, 14)
 # Pandas dayofweek: Mon=0,...,Sun=6 → Sunday, Wednesday, Friday, Saturday
 EV_CHARGE_DAYS     = (6, 2, 4, 5)
-EV_WEEKLY_KWH      = 46.0
+EV_WEEKLY_KWH      = 59.0
 
 
 def load_usage(path: Path) -> pd.DataFrame:

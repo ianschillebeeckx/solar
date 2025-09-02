@@ -19,7 +19,7 @@ COOKING_HOURS      = (17, 18)       # 5pm and 6pm
 EV_CHARGE_HOURS    = (10, 11, 12, 13, 14)
 # Pandas dayofweek: Mon=0,...,Sun=6 → Sunday, Wednesday, Friday, Saturday
 EV_CHARGE_DAYS     = (6, 2, 4, 5)
-EV_WEEKLY_KWH      = 59.0
+EV_WEEKLY_KWH      = 59.0   # ($38+$51+$57+$39)/4 months / $0.1953 per kwh / 4 weeks per month
 
 
 def load_usage(path: Path) -> pd.DataFrame:
@@ -223,8 +223,8 @@ def add_ev_weekly_charging(
 
 if __name__ == "__main__":
 
-    RAW_CSV = Path("../input/pge_usage_2024-08-01_to_2025-07-31.csv")
-    OUT_CSV = Path("../output/250901_2025_adjusted_kWh_enduse_profiled.csv")
+    RAW_CSV = Path("../input/pge_usage_2024-09-01_to_2025-08-31.csv")
+    OUT_CSV = Path("../output/250901_2025_adjusted_kWh.csv")
     PLOT_PNG = Path("../figs/250901_original_vs_adjusted.png")
     PLOT_PNG_HOD = Path("../figs/250901_hour_of_day_profiles.png")
     START_DATE = pd.Timestamp("2025-01-01")

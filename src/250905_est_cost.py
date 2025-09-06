@@ -136,7 +136,7 @@ def plot_metrics(df: pd.DataFrame, kw: float, scenario: int):
 
 if __name__ == '__main__':
     sell_price_file = '../input/250810 PGE Comp.csv'
-    buy_price_file  = '../input/250814 PGE ELEC.csv'
+    buy_price_file  = '../input/250905 PGE ELEC.csv'
 
     kws = [5.5, 6.4, 6.9, 7.5]
     scenarios = [0, 10, 20, 30, 40, 50, 60, 70]

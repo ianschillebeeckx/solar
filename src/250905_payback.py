@@ -16,6 +16,7 @@ YEARS = 15
 # Compute baseline cost from external file
 elec_cost_df = pd.read_csv("../output/kw_6.4/electricity_costs_0.csv")
 BASELINE_COST = (elec_cost_df["usage_kwh"] * elec_cost_df["buy_price"]).sum()
+print(f"BASELINE COST: ${BASELINE_COST}")
 
 # Load CSV data (update path as necessary)
 df = pd.read_csv("../output/250905_all_costs.csv")

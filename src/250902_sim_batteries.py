@@ -82,7 +82,7 @@ def plot_energy(df: pd.DataFrame, index: int, short_desc: str):
 if __name__ == '__main__':
     filter_start = pd.Timestamp("2025-01-01")
 
-    for kw in [4.5, 5.5, 6.4, 7.5]:
+    for kw in [5.5, 6.4, 6.9, 7.5]:
         # Local paths and settings (lowercase names)
         generation_dir = Path(f'../input/kw_{kw}')
         output_dir = Path(f'../output/kw_{kw}/')
